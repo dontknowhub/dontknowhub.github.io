@@ -1,104 +1,134 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>404 Not Found</title>
-    <style>
-        /* Reset some default browser styles */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>404 - Page Not Found</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
 
-        /* Body styling */
-        body {
-            font-family: 'Arial', sans-serif;
-            background: #f8f8f8;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
-            color: #333;
-            background-color: #f4f4f9;
-        }
+    body {
+      background: linear-gradient(to top right, #2c3e50, #3498db);
+      height: 100vh;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
 
-        /* Container */
-        .container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            flex-direction: column;
-        }
+    h1 {
+      font-size: 6em;
+      margin-bottom: 0.2em;
+      animation: pulse 2s infinite;
+    }
 
-        /* Error Code */
-        .error-code {
-            font-size: 150px;
-            font-weight: 700;
-            color: #ff5c8d;
-            animation: bounce 1.5s ease infinite;
-        }
+    p {
+      font-size: 1.5em;
+      margin-bottom: 1em;
+    }
 
-        /* Error Message */
-        .message {
-            font-size: 20px;
-            color: #555;
-            margin-top: 20px;
-            font-weight: 500;
-            animation: fade-in 2s ease forwards;
-            opacity: 0;
-            animation-delay: 1s;
-        }
+    canvas {
+      border: 3px solid #fff;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+    }
 
-        /* Back to home button */
-        .back-home {
-            margin-top: 30px;
-            padding: 15px 30px;
-            background-color: #ff5c8d;
-            color: white;
-            text-decoration: none;
-            font-size: 18px;
-            border-radius: 5px;
-            transition: background-color 0.3s ease;
-        }
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.05); opacity: 0.7; }
+      100% { transform: scale(1); opacity: 1; }
+    }
 
-        /* Button Hover Effect */
-        .back-home:hover {
-            background-color: #ff407c;
-        }
-
-        /* Bouncing Animation for the Error Code */
-        @keyframes bounce {
-            0% {
-                transform: translateY(0);
-            }
-            50% {
-                transform: translateY(-20px);
-            }
-            100% {
-                transform: translateY(0);
-            }
-        }
-
-        /* Fade-in Animation for the Message */
-        @keyframes fade-in {
-            100% {
-                opacity: 1;
-            }
-        }
-    </style>
+    #instructions {
+      font-size: 1em;
+      margin-top: 1em;
+      opacity: 0.8;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="content">
-            <h1 class="error-code">404</h1>
-            <p class="message">Oops! The page you're looking for doesn't exist.</p>
-            <a href="/" class="back-home">Back to Home</a>
-        </div>
-    </div>
+  <h1>404</h1>
+  <p>Oops! Page not found.</p>
+  <canvas id="game" width="300" height="400"></canvas>
+  <div id="instructions">Use ← → arrow keys to dodge falling blocks!</div>
+
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+
+    const player = {
+      x: 130,
+      y: 360,
+      width: 40,
+      height: 20,
+      color: "#e74c3c",
+      speed: 5
+    };
+
+    let keys = {};
+    document.addEventListener("keydown", e => keys[e.key] = true);
+    document.addEventListener("keyup", e => keys[e.key] = false);
+
+    const blocks = [];
+    function createBlock() {
+      const size = 30;
+      const x = Math.random() * (canvas.width - size);
+      blocks.push({ x, y: -size, size, speed: 2 + Math.random() * 3 });
+    }
+
+    function drawPlayer() {
+      ctx.fillStyle = player.color;
+      ctx.fillRect(player.x, player.y, player.width, player.height);
+    }
+
+    function updatePlayer() {
+      if (keys["ArrowLeft"] && player.x > 0) player.x -= player.speed;
+      if (keys["ArrowRight"] && player.x + player.width < canvas.width) player.x += player.speed;
+    }
+
+    function drawBlocks() {
+      ctx.fillStyle = "#f1c40f";
+      for (let b of blocks) {
+        ctx.fillRect(b.x, b.y, b.size, b.size);
+        b.y += b.speed;
+      }
+    }
+
+    function checkCollision() {
+      for (let b of blocks) {
+        if (
+          b.x < player.x + player.width &&
+          b.x + b.size > player.x &&
+          b.y < player.y + player.height &&
+          b.y + b.size > player.y
+        ) {
+          alert("Game Over! Refresh to play again.");
+          document.location.reload();
+        }
+      }
+    }
+
+    let frame = 0;
+    function gameLoop() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      updatePlayer();
+      drawPlayer();
+      drawBlocks();
+      checkCollision();
+
+      if (frame % 60 === 0) createBlock();
+      frame++;
+      requestAnimationFrame(gameLoop);
+    }
+
+    gameLoop();
+  </script>
 </body>
 </html>
